@@ -3825,7 +3825,6 @@ TEST_FUNCTION(IoTHubClientCore_SetInputMessageCallback_succeed)
     IoTHubClientCore_Destroy(iothub_handle);
 }
 
-// Tests_SRS_IOTHUBCLIENT_31_097: [ If `iotHubClientHandle` or `inputName` is NULL, `IoTHubClient_SetInputMessageCallback` shall return IOTHUB_CLIENT_INVALID_ARG. ]
 TEST_FUNCTION(IoTHubClientCore_SetInputMessageCallback_iothub_client_handle_NULL_fail)
 {
     // arrange
@@ -3838,7 +3837,6 @@ TEST_FUNCTION(IoTHubClientCore_SetInputMessageCallback_iothub_client_handle_NULL
     ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 }
 
-// Tests_SRS_IOTHUBCLIENT_31_097: [ If `iotHubClientHandle` or `inputName` is NULL, `IoTHubClient_SetInputMessageCallback` shall return IOTHUB_CLIENT_INVALID_ARG. ]
 TEST_FUNCTION(IoTHubClientCore_SetInputMessageCallback_iothub_inputName_NULL_succeeds)
 {
     // arrange
