@@ -1701,6 +1701,8 @@ static bool is_event_equal_for_match(LIST_ITEM_HANDLE list_item, const void* mat
 bool IoTHubClientCore_LL_MessageCallbackFromInput(IOTHUB_CLIENT_CORE_LL_HANDLE handle, MESSAGE_CALLBACK_INFO* messageData)
 {
     bool result;
+    IOTHUB_CLIENT_CORE_LL_HANDLE_DATA* handleData = (IOTHUB_CLIENT_CORE_LL_HANDLE_DATA*)handle;
+
     if ((handle == NULL) || messageData == NULL)
     {
         // Codes_SRS_IOTHUBCLIENT_LL_31_137: [ If either parameter `handle` or `messageData` is `NULL` then `IoTHubClient_LL_MessageCallbackFromInput` shall return `false`.** ]
@@ -1713,25 +1715,31 @@ bool IoTHubClientCore_LL_MessageCallbackFromInput(IOTHUB_CLIENT_CORE_LL_HANDLE h
         LogError("invalid argument messageData->messageHandle(NULL)");
         result = false;
     }
+    else if (handleData->event_callbacks == NULL)
+    {
+        LogError("Callback from input called but no input specific callbacks registered");
+        result = false;
+    }
     else
     {
-        IOTHUB_CLIENT_CORE_LL_HANDLE_DATA* handleData = (IOTHUB_CLIENT_CORE_LL_HANDLE_DATA*)handle;
         const char* inputName = IoTHubMessage_GetInputName(messageData->messageHandle);
-        
+  
         LIST_ITEM_HANDLE item_handle = NULL;
-
-        if (handleData->event_callbacks != NULL)
-        {
-            item_handle = singlylinkedlist_find(handleData->event_callbacks, is_event_equal_for_match, (const void*)inputName);
-        }
+    
+        item_handle = singlylinkedlist_find(handleData->event_callbacks, is_event_equal_for_match, (const void*)inputName);
 
         if (item_handle == NULL)
         {
             // Codes_SRS_IOTHUBCLIENT_LL_31_138: [ If there is no registered handler for the inputName from `IoTHubMessage_GetInputName`, then `IoTHubClient_LL_MessageCallbackFromInput` shall attempt invoke the default handler handler.** ]
             item_handle = singlylinkedlist_find(handleData->event_callbacks, is_event_equal_for_match, NULL);
         }
-        
-        if (item_handle != NULL)
+
+        if (item_handle == NULL)
+        {
+            LogError("Could not find callback (explicit or default) for input queue %s", inputName);
+            result = false;
+        }
+        else
         {
             IOTHUB_EVENT_CALLBACK* event_callback = (IOTHUB_EVENT_CALLBACK*)singlylinkedlist_item_get_value(item_handle);
             if (NULL == event_callback)
@@ -1762,10 +1770,6 @@ bool IoTHubClientCore_LL_MessageCallbackFromInput(IOTHUB_CLIENT_CORE_LL_HANDLE h
                     result = true;
                 }
             }
-        }
-        else
-        {
-            result = false;
         }
     }
 
